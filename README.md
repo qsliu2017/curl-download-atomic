@@ -1,0 +1,1 @@
+# curl-download-atomic
