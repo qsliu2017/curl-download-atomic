@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -e
+
+abort(){
+    echo "$1"
+    exit 1
+}
+
+check_md5(){
+    file=$1
+    md5=$2
+    
+    local real_md5=""
+    
+    if [[ $(uname) = Darwin ]]; then
+        real_md5="$(md5 -q $file)"
+    else
+        real_md5="$(md5sum ${file} | awk '{ print $1 }')"
+    fi
+    
+    if [[ $real_md5 != $md5 ]]; then
+        abort "MD5 mismatch. Expected: ${md5}, got: ${real_md5}"
+    fi
+}
+
+atomic_download(){
+    url=$1
+    md5=$2
+    
+    basename=$(basename ${url})
+    
+    if [[ ! -e ${basename} ]]; then
+        echo "Downloading ${url}"
+        curl -L ${url} -o ${basename}.tmp
+        check_md5 ${basename}.tmp ${md5}
+        mv ${basename}.tmp ${basename}
+    fi
+}
+
+atomic_download $1 $2
